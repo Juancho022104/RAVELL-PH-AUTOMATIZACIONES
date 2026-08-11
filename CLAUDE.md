@@ -1,4 +1,4 @@
-# Proyecto: Automatización Ravell PH (n8n)
+# Proyecto: Automatización Ravell PH (Google Apps Script)
 
 ## Contexto de la empresa
 
@@ -15,13 +15,13 @@
 
 ## Estado de la infraestructura técnica
 
-- **n8n: aún no está instalado.** Falta decidir/montar n8n Cloud vs self-hosted (Docker).
+- **Decisión de plataforma: Google Apps Script** (no n8n). Se evaluó n8n Cloud vs self-hosted vs Apps Script vs Python; se eligió Apps Script porque es gratis, corre en la nube de Google sin servidor propio, y encaja natural con Gmail/Sheets/Drive que son el corazón de estos flujos. Los workflows n8n (`agente_facturas_reportes.json`, `agente_convocatorias.json`) quedan como referencia/histórico del diseño original, pero la implementación operativa vive en `apps-script/`.
 - Sin CRM, sin página web, sin presencia en redes aún.
 
 ## Roadmap de agentes (prioridad)
 
-1. **Agente de Facturas y Reportes (admin interna)** — EN CONSTRUCCIÓN. Workflow ya diseñado: Gmail (factura entra) → extraer texto del PDF → IA extrae proveedor/valor/concepto/fecha → registra en Google Sheets ("Gastos Terra 93") → guarda PDF en Drive organizado por mes → notifica a Yenny. El archivo `agente_facturas_reportes.json` (importable a n8n) ya está armado; falta configurar credenciales reales (Gmail, OpenAI, Sheets, Drive, y decidir WhatsApp vs email para la notificación final).
-2. **Agente de convocatorias 24/7** — EN CONSTRUCCIÓN. Monitorea RedPH, convocatorias.revistaphcolombia.com y leydepropiedadhorizontal.org (cada 6h) buscando edificios que buscan cambiar de administrador; IA extrae convocatorias, cruza contra la lista de 60 edificios objetivo (Google Sheets), registra todo en "Convocatorias Detectadas" y notifica a Yenny solo cuando hay coincidencia. El archivo `agente_convocatorias.json` ya está armado; falta configurar credenciales reales (OpenAI, Sheets, WhatsApp), crear el spreadsheet con las hojas "60 Edificios Objetivo" y "Convocatorias Detectadas", y verificar los selectores CSS reales de cada sitio (el JSON extrae texto genérico del `body` como punto de partida).
+1. **Agente de Facturas y Reportes (admin interna)** — EN CONSTRUCCIÓN. Gmail (factura entra) → OCR del PDF vía Drive → IA extrae proveedor/valor/concepto/fecha → registra en Google Sheets ("Gastos Terra 93") → guarda PDF en Drive organizado por mes → notifica a Yenny por correo. Código en `apps-script/agente-1-facturas/` (ver README.md ahí para configuración paso a paso); falta configurar IDs reales de Sheets/Drive, correo de notificación, y la API key de OpenAI.
+2. **Agente de convocatorias 24/7** — EN CONSTRUCCIÓN. Monitorea RedPH, convocatorias.revistaphcolombia.com y leydepropiedadhorizontal.org (cada 6h) buscando edificios que buscan cambiar de administrador; IA extrae convocatorias, cruza contra la lista de 60 edificios objetivo (Google Sheets), registra todo en "Convocatorias Detectadas" y notifica a Yenny por correo solo cuando hay coincidencia. Código en `apps-script/agente-2-convocatorias/` (ver README.md ahí); falta configurar IDs reales de Sheets, correo de notificación, API key de OpenAI, crear el spreadsheet con las hojas "60 Edificios Objetivo" y "Convocatorias Detectadas", y verificar qué texto real devuelve cada sitio (el script extrae texto genérico de toda la página como punto de partida).
 3. Recordatorios de cartera Terra 93.
 4. CRM de prospección para los 60 edificios objetivo (ya identificados, con columna "Administrador actual" pendiente de llenar vía RUA — https://tramite.gobiernobogota.gov.co/registro-unico-administradores/, requiere NIT/cédula/matrícula, no se puede scrapear por robots.txt).
 5. Agente de contenido/redes sociales.
