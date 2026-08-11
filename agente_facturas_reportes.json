@@ -1,151 +1,46 @@
 {
-  "name": "Ravell PH - Agente 2 - Convocatorias 24/7",
+  "name": "Ravell PH - Agente 1 - Facturas y Reportes",
   "nodes": [
     {
       "parameters": {
-        "rule": { "interval": [ { "field": "hours", "hoursInterval": 6 } ] }
+        "pollTimes": { "item": [ { "mode": "everyMinute" } ] },
+        "simple": false,
+        "filters": {
+          "hasAttachment": true,
+          "q": "subject:(factura OR cuenta de cobro OR recibo)"
+        },
+        "options": {}
       },
       "id": "1",
-      "name": "Cada 6 horas",
-      "type": "n8n-nodes-base.scheduleTrigger",
+      "name": "Gmail Trigger - Nueva factura",
+      "type": "n8n-nodes-base.gmailTrigger",
       "typeVersion": 1.2,
-      "position": [ -400, 200 ]
+      "position": [ -200, 0 ],
+      "credentials": { "gmailOAuth2": { "id": "PENDIENTE", "name": "Gmail Ravell PH" } }
     },
     {
       "parameters": {
-        "url": "https://www.redph.com.co/convocatorias",
+        "resource": "attachment",
+        "messageId": "={{ $json.id }}",
         "options": {}
       },
       "id": "2",
-      "name": "HTTP - RedPH",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [ -160, 0 ]
+      "name": "Descargar adjunto",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [ 40, 0 ],
+      "credentials": { "gmailOAuth2": { "id": "PENDIENTE", "name": "Gmail Ravell PH" } }
     },
     {
       "parameters": {
-        "url": "https://convocatorias.revistaphcolombia.com",
+        "operation": "pdf",
         "options": {}
       },
       "id": "3",
-      "name": "HTTP - Revista PH Colombia",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [ -160, 200 ]
-    },
-    {
-      "parameters": {
-        "url": "https://leydepropiedadhorizontal.org/convocatorias",
-        "options": {}
-      },
-      "id": "4",
-      "name": "HTTP - Ley PH Colombia",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [ -160, 400 ]
-    },
-    {
-      "parameters": {
-        "operation": "extractHtmlContent",
-        "extractionValues": {
-          "values": [ { "key": "texto", "cssSelector": "body", "returnValue": "text" } ]
-        },
-        "options": {}
-      },
-      "id": "5",
-      "name": "Extraer texto - RedPH",
-      "type": "n8n-nodes-base.html",
-      "typeVersion": 1.2,
-      "position": [ 80, 0 ]
-    },
-    {
-      "parameters": {
-        "operation": "extractHtmlContent",
-        "extractionValues": {
-          "values": [ { "key": "texto", "cssSelector": "body", "returnValue": "text" } ]
-        },
-        "options": {}
-      },
-      "id": "6",
-      "name": "Extraer texto - Revista PH",
-      "type": "n8n-nodes-base.html",
-      "typeVersion": 1.2,
-      "position": [ 80, 200 ]
-    },
-    {
-      "parameters": {
-        "operation": "extractHtmlContent",
-        "extractionValues": {
-          "values": [ { "key": "texto", "cssSelector": "body", "returnValue": "text" } ]
-        },
-        "options": {}
-      },
-      "id": "7",
-      "name": "Extraer texto - Ley PH",
-      "type": "n8n-nodes-base.html",
-      "typeVersion": 1.2,
-      "position": [ 80, 400 ]
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            { "id": "a1", "name": "fuente", "type": "string", "value": "RedPH" },
-            { "id": "a2", "name": "url_fuente", "type": "string", "value": "https://www.redph.com.co/convocatorias" }
-          ]
-        },
-        "options": {}
-      },
-      "id": "8",
-      "name": "Etiquetar fuente - RedPH",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [ 320, 0 ]
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            { "id": "a1", "name": "fuente", "type": "string", "value": "Revista PH Colombia" },
-            { "id": "a2", "name": "url_fuente", "type": "string", "value": "https://convocatorias.revistaphcolombia.com" }
-          ]
-        },
-        "options": {}
-      },
-      "id": "9",
-      "name": "Etiquetar fuente - Revista PH",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [ 320, 200 ]
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            { "id": "a1", "name": "fuente", "type": "string", "value": "Ley de Propiedad Horizontal" },
-            { "id": "a2", "name": "url_fuente", "type": "string", "value": "https://leydepropiedadhorizontal.org/convocatorias" }
-          ]
-        },
-        "options": {}
-      },
-      "id": "10",
-      "name": "Etiquetar fuente - Ley PH",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [ 320, 400 ]
-    },
-    {
-      "parameters": {
-        "mode": "combine",
-        "combineBy": "combineAll",
-        "numberInputs": 3,
-        "options": {}
-      },
-      "id": "11",
-      "name": "Unir las 3 fuentes",
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3,
-      "position": [ 560, 200 ]
+      "name": "Extraer texto del PDF",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [ 280, 0 ]
     },
     {
       "parameters": {
@@ -154,145 +49,85 @@
           "values": [
             {
               "role": "system",
-              "content": "Eres un asistente de inteligencia comercial para Ravell PH, empresa de administración de propiedad horizontal en Bogotá zona norte (Calle 72-100 y alrededores hacia el norte). Recibes el texto crudo de una página con convocatorias o avisos, junto al campo 'fuente'. Debes identificar SOLO convocatorias donde un edificio o conjunto residencial/comercial busca CAMBIAR o CONTRATAR un nuevo administrador de propiedad horizontal (no avisos de otro tipo). Devuelve SOLO un JSON con este formato, sin texto adicional: {\"convocatorias\": [ { \"nombre_edificio\": string, \"zona_o_direccion\": string o null, \"fecha_publicacion\": string en formato YYYY-MM-DD o null, \"link\": string o null, \"fuente\": string } ] }. Si no encuentras ninguna convocatoria relevante, devuelve {\"convocatorias\": []}."
+              "content": "Eres un asistente contable de Ravell PH. Recibes el texto de una factura o cuenta de cobro y debes extraer SOLO estos campos en JSON, sin texto adicional: proveedor, nit_proveedor, concepto, valor_total (solo número, sin puntos ni símbolos), fecha_factura (formato YYYY-MM-DD), numero_factura. Si un campo no aparece, pon null."
             },
             {
               "role": "user",
-              "content": "=Fuente: {{ $json.fuente }}\nURL: {{ $json.url_fuente }}\n\nTexto:\n{{ $json.texto }}"
+              "content": "={{ $json.text }}"
             }
           ]
         },
         "options": { "responseFormat": "json_object" }
       },
-      "id": "12",
-      "name": "IA - Detectar convocatorias",
+      "id": "4",
+      "name": "IA - Extraer datos de la factura",
       "type": "n8n-nodes-base.openAi",
       "typeVersion": 1.3,
-      "position": [ 800, 200 ],
+      "position": [ 520, 0 ],
       "credentials": { "openAiApi": { "id": "PENDIENTE", "name": "OpenAI Ravell PH" } }
     },
     {
       "parameters": {
-        "fieldToSplitOut": "convocatorias",
-        "options": {}
-      },
-      "id": "13",
-      "name": "Separar convocatorias",
-      "type": "n8n-nodes-base.splitOut",
-      "typeVersion": 1,
-      "position": [ 1040, 200 ]
-    },
-    {
-      "parameters": {
-        "operation": "read",
-        "documentId": { "value": "PENDIENTE_ID_HOJA_CRM_PROSPECCION" },
-        "sheetName": { "value": "60 Edificios Objetivo" },
-        "options": {}
-      },
-      "id": "14",
-      "name": "Leer lista de 60 edificios objetivo",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.5,
-      "position": [ 1040, 420 ],
-      "credentials": { "googleSheetsOAuth2Api": { "id": "PENDIENTE", "name": "Google Sheets Ravell PH" } }
-    },
-    {
-      "parameters": {
-        "jsCode": "const objetivo = $('Leer lista de 60 edificios objetivo').all().map(i => i.json);\n\nconst normalizar = (t) => (t || '').toString().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').trim();\n\nconst nombreDetectado = normalizar($json.nombre_edificio);\n\nlet match = null;\nfor (const o of objetivo) {\n  const nombreObjetivo = normalizar(o.Edificio);\n  if (nombreObjetivo && nombreDetectado && (nombreDetectado.includes(nombreObjetivo) || nombreObjetivo.includes(nombreDetectado))) {\n    match = o;\n    break;\n  }\n}\n\nreturn {\n  ...$json,\n  coincide_lista_objetivo: match !== null,\n  edificio_objetivo: match ? match.Edificio : null,\n  zona_objetivo: match ? match.Zona : null\n};"
-      },
-      "id": "15",
-      "name": "Cruce con lista objetivo",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [ 1280, 200 ]
-    },
-    {
-      "parameters": {
         "operation": "append",
-        "documentId": { "value": "PENDIENTE_ID_HOJA_CRM_PROSPECCION" },
-        "sheetName": { "value": "Convocatorias Detectadas" },
+        "documentId": { "value": "PENDIENTE_ID_HOJA_GOOGLE_SHEETS" },
+        "sheetName": { "value": "Gastos Terra 93" },
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "Fecha detección": "={{ $now.format('yyyy-MM-dd HH:mm') }}",
-            "Edificio detectado": "={{ $json.nombre_edificio }}",
-            "Zona/Dirección": "={{ $json.zona_o_direccion }}",
-            "Fecha publicación": "={{ $json.fecha_publicacion }}",
-            "Fuente": "={{ $json.fuente }}",
-            "Link": "={{ $json.link }}",
-            "¿Coincide con lista objetivo?": "={{ $json.coincide_lista_objetivo }}",
-            "Edificio objetivo": "={{ $json.edificio_objetivo }}",
-            "Estado": "Nueva"
+            "Fecha registro": "={{ $now.format('yyyy-MM-dd HH:mm') }}",
+            "Proveedor": "={{ $json.proveedor }}",
+            "NIT": "={{ $json.nit_proveedor }}",
+            "Concepto": "={{ $json.concepto }}",
+            "Valor": "={{ $json.valor_total }}",
+            "Fecha factura": "={{ $json.fecha_factura }}",
+            "N° factura": "={{ $json.numero_factura }}",
+            "Estado": "Pendiente de revisión"
           }
         }
       },
-      "id": "16",
-      "name": "Registrar convocatoria detectada",
+      "id": "5",
+      "name": "Registrar en Google Sheets",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [ 1520, 200 ],
+      "position": [ 760, -100 ],
       "credentials": { "googleSheetsOAuth2Api": { "id": "PENDIENTE", "name": "Google Sheets Ravell PH" } }
     },
     {
       "parameters": {
-        "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
-          "conditions": [
-            {
-              "id": "c1",
-              "leftValue": "={{ $json.coincide_lista_objetivo }}",
-              "rightValue": true,
-              "operator": { "type": "boolean", "operation": "true" }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
+        "operation": "upload",
+        "name": "={{ $('IA - Extraer datos de la factura').item.json.fecha_factura }}_{{ $('IA - Extraer datos de la factura').item.json.proveedor }}.pdf",
+        "driveId": { "value": "My Drive" },
+        "folderId": { "value": "PENDIENTE_ID_CARPETA_DRIVE_TERRA93" },
+        "binaryData": true,
+        "binaryPropertyName": "data"
       },
-      "id": "17",
-      "name": "¿Coincide con edificio objetivo?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [ 1760, 200 ]
+      "id": "6",
+      "name": "Guardar PDF en Drive (Terra 93 / mes)",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [ 760, 100 ],
+      "credentials": { "googleDriveOAuth2Api": { "id": "PENDIENTE", "name": "Google Drive Ravell PH" } }
     },
     {
       "parameters": {
         "chatId": "PENDIENTE_NUMERO_WHATSAPP_YENNY",
-        "text": "=📢 Nueva convocatoria detectada\n\nEdificio: {{ $json.nombre_edificio }} (coincide con objetivo: {{ $json.edificio_objetivo }})\nZona: {{ $json.zona_o_direccion }}\nFuente: {{ $json.fuente }}\nFecha: {{ $json.fecha_publicacion }}\nLink: {{ $json.link }}\n\nRevisar y contactar pronto.",
+        "text": "=✅ Factura registrada automáticamente\n\nProveedor: {{ $('IA - Extraer datos de la factura').item.json.proveedor }}\nValor: ${{ $('IA - Extraer datos de la factura').item.json.valor_total }}\nConcepto: {{ $('IA - Extraer datos de la factura').item.json.concepto }}\nFecha: {{ $('IA - Extraer datos de la factura').item.json.fecha_factura }}\n\nQuedó guardada en Sheets y en Drive.",
         "additionalFields": {}
       },
-      "id": "18",
-      "name": "Notificar convocatoria relevante",
+      "id": "7",
+      "name": "Notificar por WhatsApp",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
-      "position": [ 2000, 100 ],
+      "position": [ 1000, 0 ],
       "credentials": { "whatsAppApi": { "id": "PENDIENTE", "name": "WhatsApp Business Ravell PH" } }
     }
   ],
   "connections": {
-    "Cada 6 horas": {
-      "main": [ [
-        { "node": "HTTP - RedPH", "type": "main", "index": 0 },
-        { "node": "HTTP - Revista PH Colombia", "type": "main", "index": 0 },
-        { "node": "HTTP - Ley PH Colombia", "type": "main", "index": 0 }
-      ] ]
-    },
-    "HTTP - RedPH": { "main": [ [ { "node": "Extraer texto - RedPH", "type": "main", "index": 0 } ] ] },
-    "HTTP - Revista PH Colombia": { "main": [ [ { "node": "Extraer texto - Revista PH", "type": "main", "index": 0 } ] ] },
-    "HTTP - Ley PH Colombia": { "main": [ [ { "node": "Extraer texto - Ley PH", "type": "main", "index": 0 } ] ] },
-    "Extraer texto - RedPH": { "main": [ [ { "node": "Etiquetar fuente - RedPH", "type": "main", "index": 0 } ] ] },
-    "Extraer texto - Revista PH": { "main": [ [ { "node": "Etiquetar fuente - Revista PH", "type": "main", "index": 0 } ] ] },
-    "Extraer texto - Ley PH": { "main": [ [ { "node": "Etiquetar fuente - Ley PH", "type": "main", "index": 0 } ] ] },
-    "Etiquetar fuente - RedPH": { "main": [ [ { "node": "Unir las 3 fuentes", "type": "main", "index": 0 } ] ] },
-    "Etiquetar fuente - Revista PH": { "main": [ [ { "node": "Unir las 3 fuentes", "type": "main", "index": 1 } ] ] },
-    "Etiquetar fuente - Ley PH": { "main": [ [ { "node": "Unir las 3 fuentes", "type": "main", "index": 2 } ] ] },
-    "Unir las 3 fuentes": { "main": [ [ { "node": "IA - Detectar convocatorias", "type": "main", "index": 0 } ] ] },
-    "IA - Detectar convocatorias": { "main": [ [ { "node": "Separar convocatorias", "type": "main", "index": 0 } ] ] },
-    "Separar convocatorias": { "main": [ [ { "node": "Leer lista de 60 edificios objetivo", "type": "main", "index": 0 } ] ] },
-    "Leer lista de 60 edificios objetivo": { "main": [ [ { "node": "Cruce con lista objetivo", "type": "main", "index": 0 } ] ] },
-    "Cruce con lista objetivo": { "main": [ [ { "node": "Registrar convocatoria detectada", "type": "main", "index": 0 } ] ] },
-    "Registrar convocatoria detectada": { "main": [ [ { "node": "¿Coincide con edificio objetivo?", "type": "main", "index": 0 } ] ] },
-    "¿Coincide con edificio objetivo?": { "main": [ [ { "node": "Notificar convocatoria relevante", "type": "main", "index": 0 } ], [] ] }
+    "Gmail Trigger - Nueva factura": { "main": [ [ { "node": "Descargar adjunto", "type": "main", "index": 0 } ] ] },
+    "Descargar adjunto": { "main": [ [ { "node": "Extraer texto del PDF", "type": "main", "index": 0 } ] ] },
+    "Extraer texto del PDF": { "main": [ [ { "node": "IA - Extraer datos de la factura", "type": "main", "index": 0 } ] ] },
+    "IA - Extraer datos de la factura": { "main": [ [ { "node": "Registrar en Google Sheets", "type": "main", "index": 0 }, { "node": "Guardar PDF en Drive (Terra 93 / mes)", "type": "main", "index": 0 } ] ] },
+    "Registrar en Google Sheets": { "main": [ [ { "node": "Notificar por WhatsApp", "type": "main", "index": 0 } ] ] }
   },
   "settings": { "executionOrder": "v1" }
 }
