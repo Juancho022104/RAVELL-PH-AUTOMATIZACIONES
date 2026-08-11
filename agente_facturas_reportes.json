@@ -1,0 +1,133 @@
+{
+  "name": "Ravell PH - Agente 1 - Facturas y Reportes",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": { "item": [ { "mode": "everyMinute" } ] },
+        "simple": false,
+        "filters": {
+          "hasAttachment": true,
+          "q": "subject:(factura OR cuenta de cobro OR recibo)"
+        },
+        "options": {}
+      },
+      "id": "1",
+      "name": "Gmail Trigger - Nueva factura",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [ -200, 0 ],
+      "credentials": { "gmailOAuth2": { "id": "PENDIENTE", "name": "Gmail Ravell PH" } }
+    },
+    {
+      "parameters": {
+        "resource": "attachment",
+        "messageId": "={{ $json.id }}",
+        "options": {}
+      },
+      "id": "2",
+      "name": "Descargar adjunto",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [ 40, 0 ],
+      "credentials": { "gmailOAuth2": { "id": "PENDIENTE", "name": "Gmail Ravell PH" } }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "id": "3",
+      "name": "Extraer texto del PDF",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [ 280, 0 ]
+    },
+    {
+      "parameters": {
+        "modelId": { "value": "gpt-4o-mini" },
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Eres un asistente contable de Ravell PH. Recibes el texto de una factura o cuenta de cobro y debes extraer SOLO estos campos en JSON, sin texto adicional: proveedor, nit_proveedor, concepto, valor_total (solo número, sin puntos ni símbolos), fecha_factura (formato YYYY-MM-DD), numero_factura. Si un campo no aparece, pon null."
+            },
+            {
+              "role": "user",
+              "content": "={{ $json.text }}"
+            }
+          ]
+        },
+        "options": { "responseFormat": "json_object" }
+      },
+      "id": "4",
+      "name": "IA - Extraer datos de la factura",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1.3,
+      "position": [ 520, 0 ],
+      "credentials": { "openAiApi": { "id": "PENDIENTE", "name": "OpenAI Ravell PH" } }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": { "value": "PENDIENTE_ID_HOJA_GOOGLE_SHEETS" },
+        "sheetName": { "value": "Gastos Terra 93" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Fecha registro": "={{ $now.format('yyyy-MM-dd HH:mm') }}",
+            "Proveedor": "={{ $json.proveedor }}",
+            "NIT": "={{ $json.nit_proveedor }}",
+            "Concepto": "={{ $json.concepto }}",
+            "Valor": "={{ $json.valor_total }}",
+            "Fecha factura": "={{ $json.fecha_factura }}",
+            "N° factura": "={{ $json.numero_factura }}",
+            "Estado": "Pendiente de revisión"
+          }
+        }
+      },
+      "id": "5",
+      "name": "Registrar en Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [ 760, -100 ],
+      "credentials": { "googleSheetsOAuth2Api": { "id": "PENDIENTE", "name": "Google Sheets Ravell PH" } }
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "name": "={{ $('IA - Extraer datos de la factura').item.json.fecha_factura }}_{{ $('IA - Extraer datos de la factura').item.json.proveedor }}.pdf",
+        "driveId": { "value": "My Drive" },
+        "folderId": { "value": "PENDIENTE_ID_CARPETA_DRIVE_TERRA93" },
+        "binaryData": true,
+        "binaryPropertyName": "data"
+      },
+      "id": "6",
+      "name": "Guardar PDF en Drive (Terra 93 / mes)",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [ 760, 100 ],
+      "credentials": { "googleDriveOAuth2Api": { "id": "PENDIENTE", "name": "Google Drive Ravell PH" } }
+    },
+    {
+      "parameters": {
+        "chatId": "PENDIENTE_NUMERO_WHATSAPP_YENNY",
+        "text": "=✅ Factura registrada automáticamente\n\nProveedor: {{ $('IA - Extraer datos de la factura').item.json.proveedor }}\nValor: ${{ $('IA - Extraer datos de la factura').item.json.valor_total }}\nConcepto: {{ $('IA - Extraer datos de la factura').item.json.concepto }}\nFecha: {{ $('IA - Extraer datos de la factura').item.json.fecha_factura }}\n\nQuedó guardada en Sheets y en Drive.",
+        "additionalFields": {}
+      },
+      "id": "7",
+      "name": "Notificar por WhatsApp",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [ 1000, 0 ],
+      "credentials": { "whatsAppApi": { "id": "PENDIENTE", "name": "WhatsApp Business Ravell PH" } }
+    }
+  ],
+  "connections": {
+    "Gmail Trigger - Nueva factura": { "main": [ [ { "node": "Descargar adjunto", "type": "main", "index": 0 } ] ] },
+    "Descargar adjunto": { "main": [ [ { "node": "Extraer texto del PDF", "type": "main", "index": 0 } ] ] },
+    "Extraer texto del PDF": { "main": [ [ { "node": "IA - Extraer datos de la factura", "type": "main", "index": 0 } ] ] },
+    "IA - Extraer datos de la factura": { "main": [ [ { "node": "Registrar en Google Sheets", "type": "main", "index": 0 }, { "node": "Guardar PDF en Drive (Terra 93 / mes)", "type": "main", "index": 0 } ] ] },
+    "Registrar en Google Sheets": { "main": [ [ { "node": "Notificar por WhatsApp", "type": "main", "index": 0 } ] ] }
+  },
+  "settings": { "executionOrder": "v1" }
+}
